@@ -1,0 +1,11 @@
+../Nextion_STM32_Library/Nextion.c:10:9:NextionAddComp	1
+../Nextion_STM32_Library/Nextion.c:33:9:NextionInit	1
+../Nextion_STM32_Library/Nextion.c:52:9:NextionUpdate	17
+../Nextion_STM32_Library/Nextion.c:125:9:NextionGetText	2
+../Nextion_STM32_Library/Nextion.c:148:9:NextionSetText	1
+../Nextion_STM32_Library/Nextion.c:163:9:NextionGetVal	1
+../Nextion_STM32_Library/Nextion.c:185:9:NextionSetVal	1
+../Nextion_STM32_Library/Nextion.c:201:9:NextionSendCommand	1
+../Nextion_STM32_Library/Nextion.c:210:9:NextionEndCommand	1
+../Nextion_STM32_Library/Nextion.c:221:9:NextionRestartIT	1
+../Nextion_STM32_Library/Nextion.c:229:9:NextionStopIT	1
