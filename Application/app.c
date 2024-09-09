@@ -17,6 +17,9 @@
 #define MSG_RSP_92 0x18924001U
 #define MSG_RSP_93 0x18934001U
 
+#define UDAN_E1 0x1E1
+#define UDAN_E4 0x1E4
+
 #define INVALID_ID 0xFFFFFFFFU
 #define QUEUE_LEN 12U
 
@@ -122,6 +125,13 @@ static void tx_hdr_init(void) {
 	tx_hdr.TransmitGlobalTime = DISABLE;
 }
 
+static void update_udan_e1(uint8_t data[]) {
+
+}
+
+static void update_udan_e4(uint8_t data[]) {
+
+}
 static void update_msg90(uint8_t data[]) {
 
 	msg90_rsp_t msg90;
@@ -187,27 +197,15 @@ static void read_can_message(void) {
 
 		switch (q_member->can_id) {
 
-		case MSG_RSP_90: {
-			update_msg90(q_member->data);
+		case UDAN_E1: {
+			update_udan_e1(q_member->data);
 			tim1 = HAL_GetTick();
 			break;
 		}
 
-		case MSG_RSP_91: {
-			update_msg91(q_member->data);
+		case UDAN_E4: {
+			update_udan_e4(q_member->data);
 			tim2 = HAL_GetTick();
-			break;
-		}
-
-		case MSG_RSP_92: {
-			update_msg92(q_member->data);
-			tim3 = HAL_GetTick();
-			break;
-		}
-
-		case MSG_RSP_93: {
-			update_msg93(q_member->data);
-			tim4 = HAL_GetTick();
 			break;
 		}
 
@@ -300,7 +298,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 		Error_Handler();
 	}
 
-	enqueue(&rx_queue, rx_hdr.ExtId, rx_data);
+	enqueue(&rx_queue, rx_hdr.StdId, rx_data);
 }
 
 void app_init(void) {
@@ -318,33 +316,20 @@ void app_init(void) {
 
 void can_init(void) {
 
-	CAN_FilterTypeDef filter1, filter2;
+	CAN_FilterTypeDef filter1;
 
 	filter1.FilterActivation = CAN_FILTER_ENABLE;
 	filter1.FilterBank = 0;
 	filter1.FilterFIFOAssignment = CAN_RX_FIFO0;
-	filter1.FilterMode = CAN_FILTERMODE_IDLIST;
+	filter1.FilterMode = CAN_FILTERMODE_IDMASK;
 	filter1.FilterScale = CAN_FILTERSCALE_32BIT;
-	filter1.FilterIdHigh = (MSG_RSP_90 << 3) >> 16;
-	filter1.FilterIdLow = ((MSG_RSP_90 << 3) & 0xFFFF) | 4U;
-	filter1.FilterMaskIdHigh = (MSG_RSP_91 << 3) >> 16;
-	filter1.FilterMaskIdLow = ((MSG_RSP_91 << 3) & 0xFFFF) | 4U;
+	filter1.FilterIdHigh = 0x3C00;
+	filter1.FilterIdLow = 0x0000;
+	filter1.FilterMaskIdHigh = 0xFF00;
+	filter1.FilterMaskIdLow = 0x0000;
 
-	filter2.FilterActivation = CAN_FILTER_ENABLE;
-	filter2.FilterBank = 1;
-	filter2.FilterFIFOAssignment = CAN_RX_FIFO0;
-	filter2.FilterMode = CAN_FILTERMODE_IDLIST;
-	filter2.FilterScale = CAN_FILTERSCALE_32BIT;
-	filter2.FilterIdHigh = (MSG_RSP_92 << 3) >> 16;
-	filter2.FilterIdLow = ((MSG_RSP_92 << 3) & 0xFFFF) | 4U;
-	filter2.FilterMaskIdHigh = (MSG_RSP_93 << 3) >> 16;
-	filter2.FilterMaskIdLow = ((MSG_RSP_93 << 3) & 0xFFFF) | 4U;
 
 	if (HAL_CAN_ConfigFilter(&hcan, &filter1) != HAL_OK) {
-		Error_Handler();
-	}
-
-	if (HAL_CAN_ConfigFilter(&hcan, &filter2) != HAL_OK) {
 		Error_Handler();
 	}
 
