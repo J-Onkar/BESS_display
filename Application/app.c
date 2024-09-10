@@ -17,8 +17,8 @@
 #define MSG_RSP_92 0x18924001U
 #define MSG_RSP_93 0x18934001U
 
-#define UDAN_E1 0x1E1
-#define UDAN_E4 0x1E4
+#define UDAN_14 0x00001400U
+#define UDAN_13 0x00001300U
 
 #define INVALID_ID 0xFFFFFFFFU
 #define QUEUE_LEN 12U
@@ -28,54 +28,46 @@
 typedef union {
 	struct {
 		uint16_t batt_volt;
-		uint16_t reserved;
 		uint16_t batt_curr;
 		uint16_t batt_soc;
+		uint16_t real_soc;
+
 	} __attribute__((packed));
 	uint8_t gen_data[8];
-} msg90_rsp_t;
+} udan_14_t;
 
 typedef union {
 	struct {
-		uint16_t max_cellv;
-		uint8_t max_cellv_id;
-		uint16_t min_cellv;
-		uint8_t min_cellv_id;
-		uint8_t reserved[2];
-	} __attribute__((packed));
-	uint8_t gen_data[8];
-} msg91_rsp_t;
-
-typedef union {
-	struct {
-		uint8_t max_cellt;
-		uint8_t max_cellt_id;
-		uint8_t min_cellt;
-		uint8_t min_cellt_id;
-		uint8_t reserved[4];
-	} __attribute__((packed));
-	uint8_t gen_data[8];
-} msg92_rsp_t;
-
-typedef union {
-	struct {
-		uint8_t state;
-		uint8_t mos_chg_state;
-		uint8_t mos_dschg_state;
-		uint8_t bms_life;
-		uint32_t rem_capacity;
+		uint8_t run_state : 4;
+		uint8_t conn_status: 4;
+		uint8_t pre_chg_status: 2;
+		uint8_t self_check_status: 2;
+		uint8_t balance_status: 1;
+		uint8_t heating_status: 1;
+		uint8_t refrige_status: 1;
+		uint8_t hv_looplock_status: 1;
+		uint16_t pos_ins_resistance;
+		uint16_t neg_ins_resistance;
+		uint8_t bms_alarm_level;
+		uint8_t ready: 2;
+		uint8_t bms_mode: 1;
+		uint8_t batt_chg_state: 2;
+		uint8_t reserved : 3;
 
 	} __attribute__((packed));
-
 	uint8_t gen_data[8];
-} msg93_rsp_t;
+} udan_13_t;
+
+
 
 static uint32_t curr_id;
 static queue_t rx_queue;
 static q_member_t queue_arr[QUEUE_LEN];
 static CAN_TxHeaderTypeDef tx_hdr;
 static uint32_t tim1, tim2, tim3, tim4;
-msg93_rsp_t msg93;
+
+udan_14_t msg_14;
+udan_13_t msg_13;
 
 static inline uint16_t HTONS(uint16_t x) {
 	return ((x << 8) | ((x >> 8) & 0xFF));
@@ -125,69 +117,30 @@ static void tx_hdr_init(void) {
 	tx_hdr.TransmitGlobalTime = DISABLE;
 }
 
-static void update_udan_e1(uint8_t data[]) {
+static void update_udan_14(uint8_t data[]) {
+
+	(void) memcpy(msg_14.gen_data, data, 8);
+
+	update_batt_volt_label(HTONS(msg_14.batt_volt));
+	update_batt_curr_label((HTONS(msg_14.batt_curr))-10000);
+	update_batt_soc_label(HTONS(msg_14.batt_soc));
+	update_soc_bar_label((HTONS(msg_14.batt_soc))/10);
+}
+
+static void update_udan_13(uint8_t data[]) {
+
+	(void) memcpy(msg_13.gen_data, data, 8);
+
+	if(msg_13.batt_chg_state == 0)
+	{update_batt_status_label("Idle");}
+
+	else if (msg_13.batt_chg_state == 1)
+		{	update_batt_status_label("Charging");}
+	else if (msg_13.batt_chg_state == 2)
+		{	update_batt_status_label("Discharging");}
 
 }
 
-static void update_udan_e4(uint8_t data[]) {
-
-}
-static void update_msg90(uint8_t data[]) {
-
-	msg90_rsp_t msg90;
-
-	(void) memcpy(msg90.gen_data, data, 8);
-
-	update_batt_volt_label(HTONS(msg90.batt_volt));
-	update_batt_curr_label(2 * (HTONS(msg90.batt_curr) - 30000));
-	update_batt_soc_label(HTONS(msg90.batt_soc));
-
-	if ((HTONS(msg90.batt_soc) <= 100) && (msg93.state != 1U)) {
-		if (htim3.State == HAL_TIM_STATE_READY) {
-			HAL_TIM_Base_Start_IT(&htim3);
-		}
-	}
-
-	else {
-		if (htim3.State != HAL_TIM_STATE_READY) {
-			HAL_GPIO_WritePin(Buzzer_pin_GPIO_Port, Buzzer_pin_Pin,
-					GPIO_PIN_RESET);
-			HAL_TIM_Base_Stop_IT(&htim3);
-		}
-	}
-
-}
-
-static void update_msg91(uint8_t data[]) {
-
-	msg91_rsp_t msg91;
-
-	(void) memcpy(msg91.gen_data, data, 8);
-
-	update_max_cellv_label(HTONS(msg91.max_cellv));
-	update_max_cellv_id_label(msg91.max_cellv_id);
-	update_min_cellv_label(HTONS(msg91.min_cellv));
-	update_min_cellv_id_label(msg91.min_cellv_id);
-
-}
-
-static void update_msg92(uint8_t data[]) {
-
-	msg92_rsp_t msg92;
-
-	(void) memcpy(msg92.gen_data, data, 8);
-
-	update_max_cellt_label(msg92.max_cellt - 40);
-	update_max_cellt_id_label(msg92.max_cellt_id);
-	update_min_cellt_label(msg92.min_cellt - 40);
-	update_min_cellt_id_label(msg92.min_cellt_id);
-}
-
-static void update_msg93(uint8_t data[]) {
-
-	(void) memcpy(msg93.gen_data, data, 8);
-
-}
 
 static void read_can_message(void) {
 
@@ -197,14 +150,14 @@ static void read_can_message(void) {
 
 		switch (q_member->can_id) {
 
-		case UDAN_E1: {
-			update_udan_e1(q_member->data);
+		case UDAN_14: {
+			update_udan_14(q_member->data);
 			tim1 = HAL_GetTick();
 			break;
 		}
 
-		case UDAN_E4: {
-			update_udan_e4(q_member->data);
+		case UDAN_13: {
+			update_udan_13(q_member->data);
 			tim2 = HAL_GetTick();
 			break;
 		}
@@ -234,16 +187,8 @@ static void timer_check(void) {
 		tim3 = HAL_GetTick();
 
 	}
-
-	else {
-		if ((HAL_GetTick() - tim4) > 5000U) {
-
-			(void) memset(&msg93, 0, sizeof(msg93_rsp_t));
-			tim4 = HAL_GetTick();
-
-		}
-	}
 }
+
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
@@ -298,7 +243,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 		Error_Handler();
 	}
 
-	enqueue(&rx_queue, rx_hdr.StdId, rx_data);
+	enqueue(&rx_queue, rx_hdr.ExtId, rx_data);
 }
 
 void app_init(void) {
@@ -323,10 +268,10 @@ void can_init(void) {
 	filter1.FilterFIFOAssignment = CAN_RX_FIFO0;
 	filter1.FilterMode = CAN_FILTERMODE_IDMASK;
 	filter1.FilterScale = CAN_FILTERSCALE_32BIT;
-	filter1.FilterIdHigh = 0x3C00;
-	filter1.FilterIdLow = 0x0000;
-	filter1.FilterMaskIdHigh = 0xFF00;
-	filter1.FilterMaskIdLow = 0x0000;
+	filter1.FilterIdHigh = 0x0000;
+	filter1.FilterIdLow = 0x8000;
+	filter1.FilterMaskIdHigh = 0x0000;
+	filter1.FilterMaskIdLow = 0x8000;
 
 
 	if (HAL_CAN_ConfigFilter(&hcan, &filter1) != HAL_OK) {
