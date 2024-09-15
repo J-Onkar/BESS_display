@@ -175,17 +175,17 @@ static void read_can_message(void) {
 
 static void timer_check(void) {
 
-	if ((HAL_GetTick() - tim1) > 5000U) {
-		//reset_page1_display();
+	if ((HAL_GetTick() - tim1) > 15000U) {
+		reset_page1_display();
 		tim1 = HAL_GetTick();
 	}
 
-	else if ((HAL_GetTick() - tim2) > 5000U) {
+	else if ((HAL_GetTick() - tim2) > 15000U) {
 		reset_page2_display();
 		tim2 = HAL_GetTick();
 	}
 
-	else if ((HAL_GetTick() - tim3) > 5000U) {
+	else if ((HAL_GetTick() - tim3) > 15000U) {
 
 		reset_page3_display();
 		tim3 = HAL_GetTick();
@@ -275,7 +275,7 @@ void can_init(void) {
 	filter1.FilterIdHigh = 0x0000;
 	filter1.FilterIdLow = 0x9800;
 	filter1.FilterMaskIdHigh = 0x0000;
-	filter1.FilterMaskIdLow = 0xFFF8;
+	filter1.FilterMaskIdLow = 0xF800;
 
 	filter2.FilterActivation = CAN_FILTER_ENABLE;
 	filter2.FilterBank = 1;
@@ -285,7 +285,7 @@ void can_init(void) {
 	filter2.FilterIdHigh = 0x0000;
 	filter2.FilterIdLow = 0xA000;
 	filter2.FilterMaskIdHigh = 0x0000;
-	filter2.FilterMaskIdLow = 0xFFF8;
+	filter2.FilterMaskIdLow = 0xF800;
 
 
 	if (HAL_CAN_ConfigFilter(&hcan, &filter1) != HAL_OK) {

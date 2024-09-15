@@ -463,13 +463,13 @@ static void timer_check(void) {
  80003a4:	b580      	push	{r7, lr}
  80003a6:	af00      	add	r7, sp, #0
 
-	if ((HAL_GetTick() - tim1) > 5000U) {
+	if ((HAL_GetTick() - tim1) > 15000U) {
  80003a8:	f000 fe4e 	bl	8001048 <HAL_GetTick>
  80003ac:	4602      	mov	r2, r0
  80003ae:	4b1a      	ldr	r3, [pc, #104]	@ (8000418 <timer_check+0x74>)
  80003b0:	681b      	ldr	r3, [r3, #0]
  80003b2:	1ad3      	subs	r3, r2, r3
- 80003b4:	f241 3288 	movw	r2, #5000	@ 0x1388
+ 80003b4:	f643 2298 	movw	r2, #15000	@ 0x3a98
  80003b8:	4293      	cmp	r3, r2
  80003ba:	d907      	bls.n	80003cc <timer_check+0x28>
 		reset_page1_display();
@@ -486,13 +486,13 @@ static void timer_check(void) {
 	}
 }
  80003ca:	e022      	b.n	8000412 <timer_check+0x6e>
-	else if ((HAL_GetTick() - tim2) > 5000U) {
+	else if ((HAL_GetTick() - tim2) > 15000U) {
  80003cc:	f000 fe3c 	bl	8001048 <HAL_GetTick>
  80003d0:	4602      	mov	r2, r0
  80003d2:	4b12      	ldr	r3, [pc, #72]	@ (800041c <timer_check+0x78>)
  80003d4:	681b      	ldr	r3, [r3, #0]
  80003d6:	1ad3      	subs	r3, r2, r3
- 80003d8:	f241 3288 	movw	r2, #5000	@ 0x1388
+ 80003d8:	f643 2298 	movw	r2, #15000	@ 0x3a98
  80003dc:	4293      	cmp	r3, r2
  80003de:	d907      	bls.n	80003f0 <timer_check+0x4c>
 		reset_page2_display();
@@ -504,13 +504,13 @@ static void timer_check(void) {
  80003ec:	6013      	str	r3, [r2, #0]
 }
  80003ee:	e010      	b.n	8000412 <timer_check+0x6e>
-	else if ((HAL_GetTick() - tim3) > 5000U) {
+	else if ((HAL_GetTick() - tim3) > 15000U) {
  80003f0:	f000 fe2a 	bl	8001048 <HAL_GetTick>
  80003f4:	4602      	mov	r2, r0
  80003f6:	4b0a      	ldr	r3, [pc, #40]	@ (8000420 <timer_check+0x7c>)
  80003f8:	681b      	ldr	r3, [r3, #0]
  80003fa:	1ad3      	subs	r3, r2, r3
- 80003fc:	f241 3288 	movw	r2, #5000	@ 0x1388
+ 80003fc:	f643 2298 	movw	r2, #15000	@ 0x3a98
  8000400:	4293      	cmp	r3, r2
  8000402:	d906      	bls.n	8000412 <timer_check+0x6e>
 		reset_page3_display();
@@ -802,8 +802,8 @@ void can_init(void) {
 	filter1.FilterMaskIdHigh = 0x0000;
  80005f0:	2300      	movs	r3, #0
  80005f2:	633b      	str	r3, [r7, #48]	@ 0x30
-	filter1.FilterMaskIdLow = 0xFFF8;
- 80005f4:	f64f 73f8 	movw	r3, #65528	@ 0xfff8
+	filter1.FilterMaskIdLow = 0xF800;
+ 80005f4:	f44f 4378 	mov.w	r3, #63488	@ 0xf800
  80005f8:	637b      	str	r3, [r7, #52]	@ 0x34
 
 	filter2.FilterActivation = CAN_FILTER_ENABLE;
@@ -830,8 +830,8 @@ void can_init(void) {
 	filter2.FilterMaskIdHigh = 0x0000;
  8000618:	2300      	movs	r3, #0
  800061a:	60bb      	str	r3, [r7, #8]
-	filter2.FilterMaskIdLow = 0xFFF8;
- 800061c:	f64f 73f8 	movw	r3, #65528	@ 0xfff8
+	filter2.FilterMaskIdLow = 0xF800;
+ 800061c:	f44f 4378 	mov.w	r3, #63488	@ 0xf800
  8000620:	60fb      	str	r3, [r7, #12]
 
 
